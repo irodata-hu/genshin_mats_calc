@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resource Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f0f7ff;
+      --card-bg: #ffffff;
+      --sky-blue: #0284c7;
+      --sky-light: #e0f2fe;
+      --sky-border: #bae6fd;
+      --gold-accent: #d97706;
+      --gold-light: #fef3c7;
+      --gold-border: #fcd34d;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Header */
+    .header {
+      max-width: 100%;
+      margin: 0 0 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      border-top: 3px solid var(--gold-accent);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.04);
+    }
+
+    .title-area h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--sky-blue);
+      letter-spacing: -0.01em;
+    }
+
+    .title-area h1 span { color: var(--gold-accent); }
+
+    .title-area p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .id-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--sky-light);
+      border: 1px solid var(--sky-border);
+      border-radius: 6px;
+      padding: 3px 6px;
+    }
+
+    .id-input-wrapper label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #0369a1;
+      text-transform: uppercase;
+    }
+
+    .id-input {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: #ffffff;
+      border: 1px solid var(--sky-border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      width: 100px;
+      outline: none;
+    }
+
+    .id-input:focus {
+      border-color: var(--gold-accent);
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
+    }
+
+    .filter-input, .day-select {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      color: var(--text-main);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 5px 8px;
+      outline: none;
+    }
+
+    .filter-input { width: 140px; }
+
+    .sync-status {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.2s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px; width: 14px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    input:checked + .slider { background-color: var(--sky-blue); }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    .btn-action {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      background-color: var(--sky-blue);
+      border: 1px solid var(--sky-blue);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background-color: #0369a1;
+    }
+
+    .btn-save {
+      background-color: var(--gold-accent);
+      border-color: var(--gold-border);
+      box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+    }
+
+    .btn-save:hover { background-color: #b45309; }
+
+    /* Group Bar */
+    .group-tabs-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .group-tab-wrapper {
+      display: inline-flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2px 4px 2px 8px;
+    }
+
+    .group-tab-wrapper.active {
+      background: var(--sky-blue);
+      border-color: var(--sky-blue);
+    }
+
+    .group-tab-btn {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .group-tab-wrapper.active .group-tab-btn { color: #ffffff; }
+
+    .group-delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-left: 4px;
+      padding: 1px 3px;
+      border-radius: 50%;
+    }
+
+    .group-tab-wrapper.active .group-delete-btn { color: #ffffff; }
+    .group-delete-btn:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    /* Grid Layout: 5 tables per row on 1080p */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    @media (max-width: 1600px) { .tables-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 1280px) { .tables-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px) { .tables-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .tables-grid { grid-template-columns: 1fr; } }
+
+    /* Card Styling */
+    .table-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      border: 1px solid var(--border-color);
+      border-top: 2px solid var(--gold-border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .table-card.hidden { display: none !important; }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--sky-light);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--sky-border);
+    }
+
+    .card-title-input {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #0369a1;
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 85%;
+    }
+
+    .card-sub-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .card-group-select, .card-day-select {
+      font-family: var(--font-body);
+      font-size: 0.68rem;
+      font-weight: 700;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      padding: 1px 4px;
+    }
+
+    .card-group-select {
+      color: var(--gold-accent);
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      text-transform: uppercase;
+    }
+
+    .card-day-select {
+      color: #0369a1;
+      background: #f0f9ff;
+      border: 1px solid var(--sky-border);
+    }
+
+    .combined-tag {
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: #0369a1;
+      background: var(--sky-light);
+      border: 1px solid var(--sky-border);
+      padding: 1px 4px;
+      border-radius: 4px;
+      display: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 1px 3px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .btn-delete:hover { background: #ef4444; color: white; }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+    th {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+
+    td {
+      padding: 4px 1px;
+      text-align: center;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    input[type="number"] {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px;
+      width: 100%;
+      max-width: 48px;
+      text-align: center;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--gold-accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
+    }
+
+    .needed-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .needed-total {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .sub-input {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .sub-input input {
+      max-width: 38px;
+      padding: 1px;
+      font-size: 0.7rem;
+    }
+
+    .left-needed-badge {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0369a1;
+      background: var(--sky-light);
+      border: 1px solid var(--sky-border);
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: inline-block;
+      width: 90%;
+      word-break: break-all;
+    }
+
+    /* Debug Column */
+    .debug-col { display: none; }
+    body.show-debug .debug-col { display: table-cell; }
+
+    .debug-box {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      line-height: 1.25;
+      color: #475569;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 2px 4px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title-area">
+      <h1>Resource <span>Tracker</span></h1>
+      <p>Multi-Profile Material Planner</p>
+    </div>
+    <div class="controls">
+      <span class="sync-status" id="syncStatus">Ready</span>
+      
+      <div class="id-input-wrapper">
+        <label for="profileIdInput">ID:</label>
+        <input type="text" id="profileIdInput" class="id-input" placeholder="Enter ID...">
+      </div>
+      <button class="btn-action" onclick="loadActiveProfile()">Load</button>
+
+      <div class="material-filter-wrapper">
+        <input type="text" id="materialFilterInput" class="filter-input" placeholder="Filter Material..." oninput="filterTables()">
+      </div>
+
+      <!-- Filter by Day -->
+      <select id="dayFilterSelect" class="day-select" onchange="filterTables()">
+        <option value="ALL">All Days</option>
+        <option value="Everyday">Everyday Only</option>
+        <option value="Mon/Thu/Sun">Mon/Thu/Sun</option>
+        <option value="Tue/Fri/Sun">Tue/Fri/Sun</option>
+        <option value="Wed/Sat/Sun">Wed/Sat/Sun</option>
+      </select>
+
+      <button class="btn-action btn-save" onclick="saveToCloud()">Save to Cloud</button>
+      <button class="btn-action" onclick="addTable()">+ Add Table</button>
+
+      <label class="toggle-group">
+        <span>Debug</span>
+        <div class="switch">
+          <input type="checkbox" id="debugToggle" onchange="toggleDebugView()">
+          <span class="slider"></span>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="group-tabs-bar" id="groupTabsContainer"></div>
+
+  <div class="tables-grid" id="tablesContainer"></div>
+
+  <script>
+    const MASTER_BIN_ID = '6a82a4c5da38895dfeeda0a4'; // Replace with Master JSONBin ID
+    const API_KEY = '$2a$10$EUDuaRGXs5.vJOxYQg3JOeLrbQxtCkfj7O35Vl.0Lj46HEvKY9FDW';           // Replace with Master Key
+    const BASE_URL = `https://api.jsonbin.io/v3/b/${MASTER_BIN_ID}`;
+
+    let tableCounter = 0;
+    let registeredGroups = new Set();
+    let activeGroupTab = "ALL";
+
+    const DAY_OPTIONS = [
+      "Everyday",
+      "Mon/Thu/Sun",
+      "Tue/Fri/Sun",
+      "Wed/Sat/Sun"
+    ];
+
+    function toggleDebugView() {
+      const isChecked = document.getElementById('debugToggle').checked;
+      document.body.classList.toggle('show-debug', isChecked);
+    }
+
+    function createTableHTML(id, materialName, selectedGroup, selectedDay) {
+      const dayVal = selectedDay || "Everyday";
+      return `
+        <div class="table-card" id="card-${id}" data-material="${materialName.toLowerCase()}" data-group="${selectedGroup}" data-day="${dayVal}">
+          <div class="card-header">
+            <input type="text" class="card-title-input" value="${materialName}" placeholder="Material Name..." oninput="onMaterialNameChange(${id})">
+            <button class="btn-delete" title="Remove Table" onclick="removeTable(${id})">✕</button>
+          </div>
+          <div class="card-sub-bar">
+            <select class="card-group-select" onchange="onCardGroupChange(${id}, this)">
+              ${renderGroupOptions(selectedGroup)}
+            </select>
+            <select class="card-day-select" onchange="onCardDayChange(${id}, this)">
+              ${DAY_OPTIONS.map(d => `<option value="${d}" ${d === dayVal ? 'selected' : ''}>${d}</option>`).join('')}
+            </select>
+          </div>
+          <div class="combined-tag" id="combined-tag-${id}"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Have</th>
+                <th>Needed</th>
+                <th>Left</th>
+                <th class="debug-col">Logic</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[1, 2, 3, 4].map((row, idx) => `
+                <tr>
+                  <td>
+                    <input type="number" value="0" class="have" oninput="triggerRecalculation(${id})">
+                  </td>
+                  <td>
+                    <div class="needed-wrapper">
+                      ${idx === 0 
+                        ? `<input type="number" value="0" class="needed-input" oninput="triggerRecalculation(${id})">`
+                        : `<span class="needed-total">0</span>
+                           <div class="sub-input">
+                             <span>+</span>
+                             <input type="number" value="0" class="needed-input" oninput="triggerRecalculation(${id})">
+                           </div>`
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <span class="left-needed-badge left-needed">0</span>
+                  </td>
+                  <td class="debug-col">
+                    <div class="debug-box debug"></div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderGroupOptions(currentGroup) {
+      let html = '';
+      registeredGroups.forEach(g => {
+        html += `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>${g}</option>`;
+      });
+      html += `<option value="__NEW__">+ New Group...</option>`;
+      return html;
+    }
+
+    function updateAllCardGroupDropdowns() {
+      document.querySelectorAll('.table-card').forEach(card => {
+        const select = card.querySelector('.card-group-select');
+        const currentGroup = card.getAttribute('data-group');
+        select.innerHTML = renderGroupOptions(currentGroup);
+      });
+    }
+
+    function addTable(materialName, groupName, dayName) {
+      tableCounter++;
+      const name = materialName || `Material #${tableCounter}`;
+      
+      let group = groupName;
+      if (!group) {
+        if (registeredGroups.size === 0) {
+          group = "Group 1";
+          registeredGroups.add(group);
+        } else {
+          group = Array.from(registeredGroups)[0];
+        }
+      } else {
+        registeredGroups.add(group);
+      }
+      
+      renderGroupTabs();
+
+      const container = document.getElementById('tablesContainer');
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = createTableHTML(tableCounter, name, group, dayName || "Everyday");
+      const cardElement = wrapper.firstElementChild;
+      
+      container.appendChild(cardElement);
+      updateAllCardGroupDropdowns();
+      recalculateAllSameMaterials(name.toLowerCase());
+      recalculateAllTables();
+      filterTables();
+      return tableCounter;
+    }
+
+    function removeTable(id) {
+      const card = document.getElementById(`card-${id}`);
+      if (card) {
+        const materialKey = card.getAttribute('data-material');
+        card.remove();
+        recalculateAllSameMaterials(materialKey);
+        recalculateAllTables();
+      }
+    }
+
+    function triggerRecalculation(id) {
+      const card = document.getElementById(`card-${id}`);
+      if (!card) return;
+      const materialKey = card.getAttribute('data-material');
+      recalculateAllSameMaterials(materialKey);
+    }
+
+    function onCardGroupChange(id, selectEl) {
+      const card = document.getElementById(`card-${id}`);
+      let selectedValue = selectEl.value;
+
+      if (selectedValue === '__NEW__') {
+        const newGroup = prompt("Enter new Group Name:");
+        if (newGroup && newGroup.trim()) {
+          selectedValue = newGroup.trim();
+          registeredGroups.add(selectedValue);
+          renderGroupTabs();
+          updateAllCardGroupDropdowns();
+        } else {
+          selectedValue = card.getAttribute('data-group');
+          selectEl.value = selectedValue;
+          return;
+        }
+      }
+
+      card.setAttribute('data-group', selectedValue);
+      selectEl.value = selectedValue;
+      
+      const materialKey = card.getAttribute('data-material');
+      recalculateAllSameMaterials(materialKey);
+      filterTables();
+    }
+
+    function onCardDayChange(id, selectEl) {
+      const card = document.getElementById(`card-${id}`);
+      card.setAttribute('data-day', selectEl.value);
+      filterTables();
+    }
+
+    function onMaterialNameChange(id) {
+      const card = document.getElementById(`card-${id}`);
+      const newName = card.querySelector('.card-title-input').value.trim().toLowerCase();
+      const oldName = card.getAttribute('data-material');
+      
+      card.setAttribute('data-material', newName);
+      recalculateAllSameMaterials(oldName);
+      recalculateAllSameMaterials(newName);
+    }
+
+    function recalculateAllTables() {
+      const uniqueMaterials = new Set();
+      document.querySelectorAll('.table-card').forEach(card => {
+        uniqueMaterials.add(card.getAttribute('data-material'));
+      });
+      uniqueMaterials.forEach(m => recalculateAllSameMaterials(m));
+    }
+
+    function recalculateAllSameMaterials(materialKey) {
+      if (!materialKey) return;
+
+      const matchingCards = Array.from(document.querySelectorAll('.table-card'))
+        .filter(card => card.getAttribute('data-material') === materialKey);
+
+      if (matchingCards.length === 0) return;
+
+      const contributingGroups = Array.from(new Set(matchingCards.map(c => c.getAttribute('data-group'))));
+      const isMultiGroup = contributingGroups.length > 1;
+      const combinedLabelText = isMultiGroup ? `Combined: ${contributingGroups.join(' + ')}` : '';
+
+      matchingCards.forEach(card => {
+        const tagEl = card.querySelector(`.combined-tag`);
+        if (tagEl) {
+          if (isMultiGroup) {
+            tagEl.textContent = combinedLabelText;
+            tagEl.style.display = 'inline-block';
+          } else {
+            tagEl.style.display = 'none';
+          }
+        }
+      });
+
+      let prevLeftNeeded = 0;
+
+      for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
+        let sumHave = 0;
+        let sumUserInputNeeded = 0;
+
+        matchingCards.forEach(card => {
+          const rows = card.querySelectorAll('tbody tr');
+          const row = rows[rowIndex];
+          if (!row) return;
+
+          const haveInput = row.querySelector('.have');
+          const neededInput = row.querySelector('.needed-input');
+
+          const haveVal = haveInput.value === '' ? 0 : parseFloat(haveInput.value);
+          const neededVal = neededInput.value === '' ? 0 : parseFloat(neededInput.value);
+
+          sumHave += isNaN(haveVal) ? 0 : haveVal;
+          sumUserInputNeeded += isNaN(neededVal) ? 0 : neededVal;
+        });
+
+        let rowTotalNeeded = 0;
+        let debugFormula = "";
+
+        if (rowIndex === 0) {
+          rowTotalNeeded = sumUserInputNeeded;
+          debugFormula = `Needed = Input (${sumUserInputNeeded})`;
+        } else {
+          rowTotalNeeded = (prevLeftNeeded * 3) + sumUserInputNeeded;
+          debugFormula = `Needed = (${prevLeftNeeded} × 3) + (${sumUserInputNeeded}) = ${rowTotalNeeded}`;
+        }
+
+        const rowLeftNeeded = rowTotalNeeded - sumHave;
+        debugFormula += `\nLeft = ${rowTotalNeeded} - (${sumHave}) = ${rowLeftNeeded}`;
+
+        matchingCards.forEach(card => {
+          const rows = card.querySelectorAll('tbody tr');
+          const row = rows[rowIndex];
+          if (!row) return;
+
+          if (rowIndex > 0) {
+            const totalEl = row.querySelector('.needed-total');
+            if (totalEl) totalEl.textContent = rowTotalNeeded;
+          }
+          const leftEl = row.querySelector('.left-needed');
+          if (leftEl) leftEl.textContent = rowLeftNeeded;
+
+          const debugEl = row.querySelector('.debug');
+          if (debugEl) debugEl.textContent = debugFormula;
+        });
+
+        prevLeftNeeded = rowLeftNeeded;
+      }
+    }
+
+    // Group Tab Management
+    function renderGroupTabs() {
+      const container = document.getElementById('groupTabsContainer');
+      container.innerHTML = `
+        <div class="group-tab-wrapper ${activeGroupTab === 'ALL' ? 'active' : ''}">
+          <button class="group-tab-btn" onclick="switchGroupTab('ALL')">All Materials</button>
+        </div>
+      `;
+      
+      registeredGroups.forEach(group => {
+        const wrapper = document.createElement('div');
+        wrapper.className = `group-tab-wrapper ${activeGroupTab === group ? 'active' : ''}`;
+        
+        wrapper.innerHTML = `
+          <button class="group-tab-btn" onclick="switchGroupTab('${group}')">${group}</button>
+          <button class="group-delete-btn" title="Delete Group" onclick="deleteGroup('${group}')">✕</button>
+        `;
+        container.appendChild(wrapper);
+      });
+    }
+
+    function switchGroupTab(groupName) {
+      activeGroupTab = groupName;
+      renderGroupTabs();
+      filterTables();
+    }
+
+    function deleteGroup(groupName) {
+      if (confirm(`Delete group "${groupName}"? Tables in this group will also be removed.`)) {
+        registeredGroups.delete(groupName);
+        
+        document.querySelectorAll(`.table-card[data-group="${groupName}"]`).forEach(card => {
+          const id = card.id.replace('card-', '');
+          removeTable(id);
+        });
+
+        if (activeGroupTab === groupName) {
+          activeGroupTab = 'ALL';
+        }
+
+        renderGroupTabs();
+        updateAllCardGroupDropdowns();
+        filterTables();
+      }
+    }
+
+    function filterTables() {
+      const filterText = document.getElementById('materialFilterInput').value.toLowerCase().trim();
+      const selectedDayFilter = document.getElementById('dayFilterSelect').value;
+      const cards = document.querySelectorAll('.table-card');
+
+      cards.forEach(card => {
+        const material = card.getAttribute('data-material');
+        const group = card.getAttribute('data-group');
+        const day = card.getAttribute('data-day') || "Everyday";
+
+        const matchesGroup = (activeGroupTab === 'ALL' || group === activeGroupTab);
+        const matchesText = (filterText === '' || material.includes(filterText));
+        
+        let matchesDay = true;
+        if (selectedDayFilter !== 'ALL') {
+          matchesDay = (day === selectedDayFilter);
+        }
+
+        if (matchesGroup && matchesText && matchesDay) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    // Cloud Persistence
+    async function getMasterRecord() {
+      try {
+        const res = await fetch(`${BASE_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+        if (res.ok) {
+          const json = await res.json();
+          return json.record && typeof json.record === 'object' ? json.record : { profiles: {} };
+        }
+      } catch (err) { console.error(err); }
+      return { profiles: {} };
+    }
+
+    async function saveToCloud() {
+      const statusEl = document.getElementById('syncStatus');
+      const profileId = document.getElementById('profileIdInput').value.trim();
+
+      if (!profileId) { alert("Please enter a Profile ID first."); return; }
+
+      localStorage.setItem('resource_tracker_last_profile', profileId);
+      statusEl.textContent = 'Saving...';
+
+      const cards = document.querySelectorAll('.table-card');
+      const tablesPayload = [];
+
+      cards.forEach(card => {
+        const title = card.querySelector('.card-title-input').value;
+        const group = card.getAttribute('data-group');
+        const day = card.getAttribute('data-day') || "Everyday";
+        const rowsData = [];
+        
+        card.querySelectorAll('tbody tr').forEach(row => {
+          rowsData.push({
+            have: row.querySelector('.have').value,
+            needed: row.querySelector('.needed-input').value
+          });
+        });
+
+        tablesPayload.push({ title, group, day, rows: rowsData });
+      });
+
+      const masterData = await getMasterRecord();
+      if (!masterData.profiles) masterData.profiles = {};
+      masterData.profiles[profileId] = {
+        groups: Array.from(registeredGroups),
+        tables: tablesPayload
+      };
+
+      try {
+        const res = await fetch(BASE_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+          body: JSON.stringify(masterData)
+        });
+
+        if (res.ok) {
+          statusEl.textContent = `Saved (${profileId})`;
+          setTimeout(() => statusEl.textContent = 'Ready', 3000);
+        } else {
+          statusEl.textContent = 'Save failed.';
+        }
+      } catch (err) { statusEl.textContent = 'Network error.'; }
+    }
+
+    async function loadProfile(profileId) {
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.textContent = `Loading...`;
+
+      localStorage.setItem('resource_tracker_last_profile', profileId);
+
+      const masterData = await getMasterRecord();
+      const profileData = masterData.profiles ? masterData.profiles[profileId] : null;
+
+      document.getElementById('tablesContainer').innerHTML = '';
+      tableCounter = 0;
+      registeredGroups = new Set();
+
+      if (profileData) {
+        if (profileData.groups) profileData.groups.forEach(g => registeredGroups.add(g));
+        renderGroupTabs();
+
+        const tablesData = profileData.tables || [];
+        tablesData.forEach(data => {
+          const newId = addTable(data.title, data.group, data.day || "Everyday");
+          const card = document.getElementById(`card-${newId}`);
+          const rows = card.querySelectorAll('tbody tr');
+
+          data.rows.forEach((rowData, idx) => {
+            if (rows[idx]) {
+              rows[idx].querySelector('.have').value = rowData.have;
+              rows[idx].querySelector('.needed-input').value = rowData.needed;
+            }
+          });
+        });
+
+        recalculateAllTables();
+        statusEl.textContent = `Loaded (${profileId})`;
+      } else {
+        renderGroupTabs();
+        statusEl.textContent = `New Profile (${profileId})`;
+      }
+    }
+
+    function loadActiveProfile() {
+      const currentId = document.getElementById('profileIdInput').value.trim();
+      if (currentId) loadProfile(currentId);
+    }
+
+    function initApp() {
+      const cachedProfile = localStorage.getItem('resource_tracker_last_profile');
+      if (cachedProfile) {
+        document.getElementById('profileIdInput').value = cachedProfile;
+        loadProfile(cachedProfile);
+      } else {
+        renderGroupTabs();
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
